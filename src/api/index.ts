@@ -1,10 +1,15 @@
-import { options } from './options'
-
 import youtubeSearch from "youtube-search";
+import { options } from "./options";
+import { YoutubeResult } from "../interfaces/youtube";
 
-youtubeSearch('test', options, (err, results) => {
-    if(err) return console.log(err);
-
-    console.dir(results);
-});
-
+export const searchVideo = (query: string): Promise<YoutubeResult[]> => {
+    return new Promise((resolve, reject) => {
+        youtubeSearch(query, options, (err, results) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(results as YoutubeResult[]);
+            }
+        });
+    });
+};
