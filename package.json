@@ -4,6 +4,7 @@
   },
   "main": "dist/index.js",
   "dependencies": {
+    "@distube/ytdl-core": "^4.15.8",
     "@dotenvx/dotenvx": "^1.32.1",
     "@googleapis/youtube": "^20.0.0",
     "@types/node": "^22.10.5",
@@ -12,6 +13,7 @@
     "googleapis": "^144.0.0",
     "grammy": "^1.34.0",
     "ts-node": "^10.9.2",
-    "youtube-search": "^1.1.6"
+    "youtube-search": "^1.1.6",
+    "ytdl-core": "npm:@distube/ytdl-core@^4.15.8"
   }
 }

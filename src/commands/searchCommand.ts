@@ -11,7 +11,9 @@ export const searchCommand = async (ctx: Context) => {
         result.forEach((video: YoutubeResult) => {
             const videoTitle = video.title;
             const channelName = video.channelTitle;
+            const link = video.link
             console.log(`Video Title: ${videoTitle}, Channel: ${channelName}`);
+            console.log(`Video URL: ${video.link}`)
 
             const inlineKeyboard = new InlineKeyboard()
                 .text("Скачать MP3🎵", "mp3")
