@@ -4,22 +4,24 @@ import { searchCommand, videoLinks } from './commands/searchCommand';
 import { downloadAudio, downloadVideo, mergeAudioVideo } from "./ytDownloader/ytDownloader";
 import fs from "fs";
 import { downloadMP3 } from './services/downloadMP3';
+import { I18nService } from './i18n/i18n.service';
 
 const bot = new Bot(botToken);
+const i18n = I18nService.getInstance();
 
 bot.command("search", searchCommand);
 
 bot.callbackQuery(/mp4:.+/, async (ctx) => {
     try {
         await ctx.answerCallbackQuery({
-            text: "Загрузка началась. Пожалуйста, подождите.",
+            text: i18n.t(ctx, 'download.start'),
         });
 
         const uniqueId = ctx.callbackQuery.data.split(":")[1];
         const videoLink = videoLinks[uniqueId];
 
         if (!videoLink) {
-            throw new Error("Video link not found for the given identifier");
+            throw new Error(i18n.t(ctx, 'download.videoNotFound'));
         }
 
         // Download both audio and video
@@ -37,8 +39,8 @@ bot.callbackQuery(/mp4:.+/, async (ctx) => {
         // Clean up the final video file
         fs.unlinkSync(finalVideoPath);
     } catch (error) {
-        console.error("Ошибка при выполнении функции:", error);
-        await ctx.reply("Произошла ошибка при загрузке видео.");
+        console.error("Error:", error);
+        await ctx.reply(i18n.t(ctx, 'download.error'));
     }
 });
 
@@ -49,18 +51,18 @@ bot.callbackQuery(/mp3:(.+)/, async (ctx) => {
         
         if (!videoUrl) {
             await ctx.answerCallbackQuery({
-                text: "Video link not found.",
+                text: i18n.t(ctx, 'download.videoNotFound'),
                 show_alert: true
             });
             return;
         }
 
         await ctx.answerCallbackQuery({
-            text: "Starting MP3 download...",
+            text: i18n.t(ctx, 'download.mp3Started'),
         });
 
         const filePath = await downloadMP3(videoUrl);
-        await ctx.reply("Uploading your MP3...");
+        await ctx.reply(i18n.t(ctx, 'download.mp3Uploading'));
         await ctx.replyWithAudio(new InputFile(filePath));
 
         // Clean up the file after sending
@@ -69,7 +71,7 @@ bot.callbackQuery(/mp3:(.+)/, async (ctx) => {
     } catch (error) {
         console.error('Error in MP3 download:', error);
         await ctx.answerCallbackQuery({
-            text: "Error downloading MP3",
+            text: i18n.t(ctx, 'download.mp3Error'),
             show_alert: true
         });
     }
