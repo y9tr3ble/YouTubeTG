@@ -1,7 +1,7 @@
 import { Bot, InputFile } from "grammy";
 import { botToken } from './config';
 import { searchCommand, videoLinks } from './commands/searchCommand';
-import { videoDownloader } from "./ytDownloader/ytDownloader";
+import { downloadAudio, downloadVideo, mergeAudioVideo } from "./ytDownloader/ytDownloader";
 import fs from "fs";
 
 const bot = new Bot(botToken);
@@ -21,17 +21,24 @@ bot.callbackQuery(/mp4:.+/, async (ctx) => {
             throw new Error("Video link not found for the given identifier");
         }
 
-        const videoPath = await videoDownloader(videoLink);
+        // Download both audio and video
+        const [audioPath, videoPath] = await Promise.all([
+            downloadAudio(videoLink),
+            downloadVideo(videoLink)
+        ]);
 
-        await ctx.api.sendVideo(ctx.chat?.id!, new InputFile(fs.createReadStream(videoPath)));
+        // Merge audio and video
+        const finalVideoPath = await mergeAudioVideo(audioPath, videoPath);
 
-        fs.unlinkSync(videoPath);
+        // Send the final video
+        await ctx.api.sendVideo(ctx.chat?.id!, new InputFile(fs.createReadStream(finalVideoPath)));
+
+        // Clean up the final video file
+        fs.unlinkSync(finalVideoPath);
     } catch (error) {
         console.error("Ошибка при выполнении функции:", error);
-
         await ctx.reply("Произошла ошибка при загрузке видео.");
     }
 });
-
 
 bot.start();
