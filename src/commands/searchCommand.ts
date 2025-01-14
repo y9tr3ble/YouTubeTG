@@ -6,7 +6,14 @@ import { InlineKeyboard } from 'grammy';
 const videoLinks: { [key: string]: string } = {};
 
 export const searchCommand = async (ctx: Context) => {
-    const query = "deadp47"; // Замените на пользовательский ввод, если нужно
+    // Get everything after the /search command
+    const query = ctx.message?.text?.split('/search ')[1]?.trim();
+    
+    if (!query) {
+        await ctx.reply("Please provide a search query. Example: /search song name");
+        return;
+    }
+
     try {
         const result = await searchVideos(query);
 
