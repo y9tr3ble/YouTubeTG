@@ -21,25 +21,25 @@ bot.command("settings", async (ctx) => {
     const settings = await settingsService.getUserSettings(ctx.from.id);
     const keyboard = new InlineKeyboard()
         .text(
-            settings.downloadType === 'mp3' ? '✅ MP3' : 'MP3',
+            settings.downloadType === 'mp3' ? '✅ MP3 🎵' : 'MP3 🎵',
             'setting:mp3'
         )
         .text(
-            settings.downloadType === 'mp4' ? '✅ MP4' : 'MP4',
+            settings.downloadType === 'mp4' ? '✅ MP4 🎥' : 'MP4 🎥',
             'setting:mp4'
         )
         .row()
         .text(
-            settings.language === 'en' ? '✅ English' : 'English',
+            settings.language === 'en' ? '✅ English 🇬🇧' : 'English 🇬🇧',
             'lang:en'
         )
         .text(
-            settings.language === 'ru' ? '✅ Русский' : 'Русский',
+            settings.language === 'ru' ? '✅ Русский 🇷🇺' : 'Русский 🇷🇺',
             'lang:ru'
         );
 
     await ctx.reply(
-        i18n.t(ctx, 'settings.currentSettings', {
+        await i18n.t(ctx, 'settings.currentSettings', {
             language: settings.language === 'ru' ? 'Русский' : 'English',
             downloadType: settings.downloadType.toUpperCase()
         }),
@@ -53,31 +53,31 @@ bot.callbackQuery(/setting:(mp3|mp4)/, async (ctx) => {
     const downloadType = ctx.match[1] as 'mp3' | 'mp4';
     await settingsService.updateDownloadType(ctx.from.id, downloadType);
     await ctx.answerCallbackQuery({
-        text: i18n.t(ctx, 'settings.downloadTypeChanged', { type: downloadType.toUpperCase() })
+        text: await i18n.t(ctx, 'settings.downloadTypeChanged', { type: downloadType.toUpperCase() })
     });
     
     const settings = await settingsService.getUserSettings(ctx.from.id);
     const keyboard = new InlineKeyboard()
         .text(
-            downloadType === 'mp3' ? '✅ MP3' : 'MP3',
+            downloadType === 'mp3' ? '✅ MP3 🎵' : 'MP3 🎵',
             'setting:mp3'
         )
         .text(
-            downloadType === 'mp4' ? '✅ MP4' : 'MP4',
+            downloadType === 'mp4' ? '✅ MP4 🎥' : 'MP4 🎥',
             'setting:mp4'
         )
         .row()
         .text(
-            settings.language === 'en' ? '✅ English' : 'English',
+            settings.language === 'en' ? '✅ English 🇬🇧' : 'English 🇬🇧',
             'lang:en'
         )
         .text(
-            settings.language === 'ru' ? '✅ Русский' : 'Русский',
+            settings.language === 'ru' ? '✅ Русский 🇷🇺' : 'Русский 🇷🇺',
             'lang:ru'
         );
 
     await ctx.editMessageText(
-        i18n.t(ctx, 'settings.currentSettings', {
+        await i18n.t(ctx, 'settings.currentSettings', {
             language: settings.language === 'ru' ? 'Русский' : 'English',
             downloadType: settings.downloadType.toUpperCase()
         }),
@@ -89,52 +89,61 @@ bot.callbackQuery(/lang:(en|ru)/, async (ctx) => {
     if (!ctx.from) return;
 
     const language = ctx.match[1] as 'en' | 'ru';
+    
+    // First update the language
     await settingsService.updateLanguage(ctx.from.id, language);
     
+    // Then get updated settings
     const settings = await settingsService.getUserSettings(ctx.from.id);
+    
+    // Answer callback query with new language settings
+    await ctx.answerCallbackQuery({
+        text: language === 'ru' ? 'Язык изменён на Русский' : 'Language changed to English'
+    });
+
     const keyboard = new InlineKeyboard()
         .text(
-            settings.downloadType === 'mp3' ? '✅ MP3' : 'MP3',
+            settings.downloadType === 'mp3' ? '✅ MP3 🎵' : 'MP3 🎵',
             'setting:mp3'
         )
         .text(
-            settings.downloadType === 'mp4' ? '✅ MP4' : 'MP4',
+            settings.downloadType === 'mp4' ? '✅ MP4 🎥' : 'MP4 🎥',
             'setting:mp4'
         )
         .row()
         .text(
-            language === 'en' ? '✅ English' : 'English',
+            settings.language === 'en' ? '✅ English 🇬🇧' : 'English 🇬🇧',
             'lang:en'
         )
         .text(
-            language === 'ru' ? '✅ Русский' : 'Русский',
+            settings.language === 'ru' ? '✅ Русский 🇷🇺' : 'Русский 🇷🇺',
             'lang:ru'
         );
 
-    await ctx.answerCallbackQuery({
-        text: i18n.t(ctx, 'settings.languageChanged')
-    });
-
+    // Now update the message with new language
     await ctx.editMessageText(
-        i18n.t(ctx, 'settings.currentSettings', {
+        await i18n.t(ctx, 'settings.currentSettings', {
             language: settings.language === 'ru' ? 'Русский' : 'English',
             downloadType: settings.downloadType.toUpperCase()
         }),
         { reply_markup: keyboard }
     );
+
+    // Send language change notification with new language
+    await ctx.reply(await i18n.t(ctx, 'settings.languageChanged'));
 });
 
 bot.callbackQuery(/mp4:.+/, async (ctx) => {
     try {
         await ctx.answerCallbackQuery({
-            text: i18n.t(ctx, 'download.start'),
+            text: await i18n.t(ctx, 'download.start'),
         });
 
         const uniqueId = ctx.callbackQuery.data.split(":")[1];
         const videoLink = videoLinks[uniqueId];
 
         if (!videoLink) {
-            throw new Error(i18n.t(ctx, 'download.videoNotFound'));
+            throw new Error(await i18n.t(ctx, 'download.videoNotFound'));
         }
 
         // Download both audio and video
@@ -153,7 +162,7 @@ bot.callbackQuery(/mp4:.+/, async (ctx) => {
         fs.unlinkSync(finalVideoPath);
     } catch (error) {
         console.error("Error:", error);
-        await ctx.reply(i18n.t(ctx, 'download.error'));
+        await ctx.reply(await i18n.t(ctx, 'download.error'));
     }
 });
 
@@ -164,18 +173,18 @@ bot.callbackQuery(/mp3:(.+)/, async (ctx) => {
         
         if (!videoUrl) {
             await ctx.answerCallbackQuery({
-                text: i18n.t(ctx, 'download.videoNotFound'),
+                text: await i18n.t(ctx, 'download.videoNotFound'),
                 show_alert: true
             });
             return;
         }
 
         await ctx.answerCallbackQuery({
-            text: i18n.t(ctx, 'download.mp3Started'),
+            text: await i18n.t(ctx, 'download.mp3Started'),
         });
 
         const filePath = await downloadMP3(videoUrl);
-        await ctx.reply(i18n.t(ctx, 'download.mp3Uploading'));
+        await ctx.reply(await i18n.t(ctx, 'download.mp3Uploading'));
         await ctx.replyWithAudio(new InputFile(filePath));
 
         // Clean up the file after sending
@@ -184,7 +193,7 @@ bot.callbackQuery(/mp3:(.+)/, async (ctx) => {
     } catch (error) {
         console.error('Error in MP3 download:', error);
         await ctx.answerCallbackQuery({
-            text: i18n.t(ctx, 'download.mp3Error'),
+            text: await i18n.t(ctx, 'download.mp3Error'),
             show_alert: true
         });
     }
@@ -199,29 +208,29 @@ bot.on("inline_query", async (ctx) => {
 
     try {
         const videos = await searchVideos(query);
-        const results: InlineQueryResultArticle[] = videos.map((video, index) => ({
+        const results = await Promise.all(videos.map(async (video, index) => ({
             type: "article",
             id: `video_${index}`,
             title: video.title,
             description: video.description || "",
             thumbnail_url: video.thumbnails.default.url,
             input_message_content: {
-                message_text: i18n.t(ctx, 'video.info', {
+                message_text: await i18n.t(ctx, 'video.info', {
                     title: video.title,
                     channel: video.channelTitle
                 })
             },
             reply_markup: new InlineKeyboard()
-                .text(i18n.t(ctx, 'buttons.downloadMP3'), `mp3:${video.id}`)
-                .text(i18n.t(ctx, 'buttons.downloadMP4'), `mp4:${video.id}`)
-        }));
+                .text(await i18n.t(ctx, 'buttons.downloadMP3'), `mp3:${video.id}`)
+                .text(await i18n.t(ctx, 'buttons.downloadMP4'), `mp4:${video.id}`)
+        })));
 
         const button: InlineQueryResultsButton = {
             text: "Change default download type",
             start_parameter: "settings"
         };
 
-        await ctx.answerInlineQuery(results, {
+        await ctx.answerInlineQuery(results as InlineQueryResultArticle[], {
             cache_time: 300,
             button
         });
@@ -229,6 +238,10 @@ bot.on("inline_query", async (ctx) => {
         console.error('Inline query error:', error);
         await ctx.answerInlineQuery([]);
     }
+});
+
+bot.catch((err) => {
+    console.error('Bot error:', err);
 });
 
 bot.start();

@@ -17,5 +17,15 @@ export const en = {
     },
     video: {
         info: "Video: ${title}\nChannel: ${channel}"
+    },
+    settings: {
+        title: "⚙️ Settings",
+        downloadType: "📥 Download type:",
+        language: "🌐 Interface language:",
+        updated: "Settings updated successfully",
+        currentLanguage: "Current language: English",
+        languageChanged: "✅ Language successfully changed to English",
+        downloadTypeChanged: "✅ Default download type changed to ${type}",
+        currentSettings: "⚙️ Settings\n\n🌐 Language: ${language}\n📥 Download type: ${downloadType}"
     }
 };
