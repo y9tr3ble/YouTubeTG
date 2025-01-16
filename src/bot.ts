@@ -27,9 +27,24 @@ bot.command("settings", async (ctx) => {
         .text(
             settings.downloadType === 'mp4' ? '✅ MP4' : 'MP4',
             'setting:mp4'
+        )
+        .row()
+        .text(
+            settings.language === 'en' ? '✅ English' : 'English',
+            'lang:en'
+        )
+        .text(
+            settings.language === 'ru' ? '✅ Русский' : 'Русский',
+            'lang:ru'
         );
 
-    await ctx.reply("Choose your preferred download type:", { reply_markup: keyboard });
+    await ctx.reply(
+        i18n.t(ctx, 'settings.currentSettings', {
+            language: settings.language === 'ru' ? 'Русский' : 'English',
+            downloadType: settings.downloadType.toUpperCase()
+        }),
+        { reply_markup: keyboard }
+    );
 });
 
 bot.callbackQuery(/setting:(mp3|mp4)/, async (ctx) => {
@@ -37,14 +52,76 @@ bot.callbackQuery(/setting:(mp3|mp4)/, async (ctx) => {
 
     const downloadType = ctx.match[1] as 'mp3' | 'mp4';
     await settingsService.updateDownloadType(ctx.from.id, downloadType);
-    await ctx.answerCallbackQuery({ text: `Default download type set to ${downloadType.toUpperCase()}` });
+    await ctx.answerCallbackQuery({
+        text: i18n.t(ctx, 'settings.downloadTypeChanged', { type: downloadType.toUpperCase() })
+    });
     
-    // Update keyboard
+    const settings = await settingsService.getUserSettings(ctx.from.id);
     const keyboard = new InlineKeyboard()
-        .text(downloadType === 'mp3' ? '✅ MP3' : 'MP3', 'setting:mp3')
-        .text(downloadType === 'mp4' ? '✅ MP4' : 'MP4', 'setting:mp4');
+        .text(
+            downloadType === 'mp3' ? '✅ MP3' : 'MP3',
+            'setting:mp3'
+        )
+        .text(
+            downloadType === 'mp4' ? '✅ MP4' : 'MP4',
+            'setting:mp4'
+        )
+        .row()
+        .text(
+            settings.language === 'en' ? '✅ English' : 'English',
+            'lang:en'
+        )
+        .text(
+            settings.language === 'ru' ? '✅ Русский' : 'Русский',
+            'lang:ru'
+        );
 
-    await ctx.editMessageReplyMarkup({ reply_markup: keyboard });
+    await ctx.editMessageText(
+        i18n.t(ctx, 'settings.currentSettings', {
+            language: settings.language === 'ru' ? 'Русский' : 'English',
+            downloadType: settings.downloadType.toUpperCase()
+        }),
+        { reply_markup: keyboard }
+    );
+});
+
+bot.callbackQuery(/lang:(en|ru)/, async (ctx) => {
+    if (!ctx.from) return;
+
+    const language = ctx.match[1] as 'en' | 'ru';
+    await settingsService.updateLanguage(ctx.from.id, language);
+    
+    const settings = await settingsService.getUserSettings(ctx.from.id);
+    const keyboard = new InlineKeyboard()
+        .text(
+            settings.downloadType === 'mp3' ? '✅ MP3' : 'MP3',
+            'setting:mp3'
+        )
+        .text(
+            settings.downloadType === 'mp4' ? '✅ MP4' : 'MP4',
+            'setting:mp4'
+        )
+        .row()
+        .text(
+            language === 'en' ? '✅ English' : 'English',
+            'lang:en'
+        )
+        .text(
+            language === 'ru' ? '✅ Русский' : 'Русский',
+            'lang:ru'
+        );
+
+    await ctx.answerCallbackQuery({
+        text: i18n.t(ctx, 'settings.languageChanged')
+    });
+
+    await ctx.editMessageText(
+        i18n.t(ctx, 'settings.currentSettings', {
+            language: settings.language === 'ru' ? 'Русский' : 'English',
+            downloadType: settings.downloadType.toUpperCase()
+        }),
+        { reply_markup: keyboard }
+    );
 });
 
 bot.callbackQuery(/mp4:.+/, async (ctx) => {
