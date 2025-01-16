@@ -1,6 +1,7 @@
 import { en } from './translations/en';
 import { ru } from './translations/ru';
 import { Context } from 'grammy';
+import { SettingsService } from '../services/settings.service';
 
 type DeepPartial<T> = {
     [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
@@ -12,8 +13,11 @@ export class I18nService {
         en,
         ru
     };
+    private settingsService: SettingsService;
 
-    private constructor() {}
+    private constructor() {
+        this.settingsService = SettingsService.getInstance();
+    }
 
     public static getInstance(): I18nService {
         if (!I18nService.instance) {
@@ -22,9 +26,13 @@ export class I18nService {
         return I18nService.instance;
     }
 
-    public t(ctx: Context, key: string, params: { [key: string]: string } = {}): string {
-        const langCode = ctx.from?.language_code || 'en';
-        const lang = langCode === 'ru' ? 'ru' : 'en';
+    public async t(ctx: Context, key: string, params: { [key: string]: string } = {}): Promise<string> {
+        let lang = 'en';
+        
+        if (ctx.from?.id) {
+            const settings = await this.settingsService.getUserSettings(ctx.from.id);
+            lang = settings.language === 'ru' ? 'ru' : 'en';
+        }
         
         let translation = this.getNestedTranslation(this.translations[lang], key);
         
